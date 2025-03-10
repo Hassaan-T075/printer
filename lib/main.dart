@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:flutter/services.dart';
+
 
 void main() {
   runApp(PrintServiceApp());
@@ -149,3 +151,17 @@ class _PrintersScreenState extends State<PrintersScreen> {
     );
   }
 }
+
+
+class PrintService {
+  static const platform = MethodChannel('print_service');
+
+  static Future<void> startPrintJob() async {
+    try {
+      await platform.invokeMethod('startPrintJob');
+    } on PlatformException catch (e) {
+      print("Failed to start print job: '${e.message}'.");
+    }
+  }
+}
+
