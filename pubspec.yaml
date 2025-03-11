@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences:
   pdfx: 
+  printing: ^5.14.2
+  receive_sharing_intent: 1.7.0
 
 dev_dependencies:
   flutter_test:
