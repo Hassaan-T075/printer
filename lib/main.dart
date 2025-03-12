@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:printer/printer_selection_screen.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,25 +108,87 @@ class _MyAppState extends State<MyApp> {
       String printerUrl =
           selectedPrinter!.url!.replaceFirst("ipp://", "http://");
 
-      print(printerUrl);
+      // print(printerUrl);
 
-      // Send a raw IPP request (if printer supports IPP)
+      // // Send a raw IPP request (if printer supports IPP)
+      // final response = await http.put(
+      //   Uri.parse(printerUrl), // Printer's IPP URL
+      //   headers: {
+      //     'Content-Type': 'application/pdf',
+      //   },
+      //   body: pdfBytes,
+      // );
+
+      Uri uri = Uri.parse(printerUrl);
+
+      // Construct IPP request headers
+      // final Uint8List ippRequest = buildIppPrintRequest(pdfBytes);
+
+      List<int> ippRequest = [
+        0x01, 0x01, // IPP version 1.1
+        0x00, 0x0F, // Identify-Printer operation (0x000F)
+        0x00, 0x01, // Request ID
+        0x01, // Operation attributes tag
+        ...encodeAttribute('printer-uri', selectedPrinter!.url!),
+        0x03, // End of attributes
+      ];
+
       final response = await http.post(
-        Uri.parse(printerUrl), // Printer's IPP URL
+        uri,
         headers: {
-          'Content-Type': 'application/pdf',
+          'Content-Type': 'application/ipp', // IPP requires this content type
         },
-        body: pdfBytes,
+        // body: ippRequest, // Properly formatted IPP request
+        body: Uint8List.fromList(ippRequest),
       );
 
       if (response.statusCode == 200) {
-        print("Printing successful on ${selectedPrinter!.name}");
+        // print("Printing successful on ${selectedPrinter!.name}");
+        print("Printing failed: ${response.bodyBytes}");
       } else {
         print("Printing failed: ${response.statusCode}");
       }
     } catch (e) {
       print("Error while printing: $e");
     }
+  }
+
+  Uint8List buildIppPrintRequest(Uint8List pdfData) {
+    List<int> request = [];
+
+    // IPP Header (Version 1.1, Print-Job operation)
+    request.addAll([0x01, 0x01]); // IPP version 1.1
+    request.addAll([0x00, 0x02]); // Print-Job operation (0x0002)
+    request.addAll([0x00, 0x01]); // Request ID
+
+    // Operation attributes
+    request.add(0x01); // Operation attributes tag
+    request.addAll(encodeAttribute('attributes-charset', 'utf-8'));
+    request.addAll(encodeAttribute('attributes-natural-language', 'en'));
+    request.addAll(encodeAttribute('printer-uri', selectedPrinter!.url!));
+    request.addAll(encodeAttribute('requesting-user-name', 'FlutterApp'));
+    request.addAll(encodeAttribute('document-format', 'application/pdf'));
+    request.addAll(
+        encodeAttribute('content-type', 'application/x-www-form-urlencoded'));
+
+    // End of attributes
+    request.add(0x03);
+
+    // Document content
+    request.addAll(pdfData);
+
+    return Uint8List.fromList(request);
+  }
+
+// Helper function to encode IPP attributes
+  List<int> encodeAttribute(String name, String value) {
+    List<int> data = [];
+    data.add(0x47); // String attribute type
+    data.add(name.length);
+    data.addAll(name.codeUnits);
+    data.add(value.length);
+    data.addAll(value.codeUnits);
+    return data;
   }
 
   @override
