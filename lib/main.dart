@@ -7,6 +7,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:printing/printing.dart';
 import 'dart:io';
+import 'auto_printer.dart';
 import 'pdfviewer.dart';
 import 'package:http/http.dart' as http;
 
@@ -133,21 +134,29 @@ class _MyAppState extends State<MyApp> {
         0x03, // End of attributes
       ];
 
-      final response = await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/ipp', // IPP requires this content type
-        },
-        // body: ippRequest, // Properly formatted IPP request
-        body: Uint8List.fromList(ippRequest),
-      );
+      bool success = await AutoPrint.printPDF(pdfPath!, printerUrl);
 
-      if (response.statusCode == 200) {
-        // print("Printing successful on ${selectedPrinter!.name}");
-        print("Printing failed: ${response.bodyBytes}");
+      if (success) {
+        print("Printing started successfully!");
       } else {
-        print("Printing failed: ${response.statusCode}");
+        print("Failed to start printing.");
       }
+
+      // final response = await http.post(
+      //   uri,
+      //   headers: {
+      //     'Content-Type': 'application/ipp', // IPP requires this content type
+      //   },
+      //   // body: ippRequest, // Properly formatted IPP request
+      //   body: Uint8List.fromList(ippRequest),
+      // );
+
+      // if (response.statusCode == 200) {
+      //   // print("Printing successful on ${selectedPrinter!.name}");
+      //   print("Printing failed: ${response.bodyBytes}");
+      // } else {
+      //   print("Printing failed: ${response.statusCode}");
+      // }
     } catch (e) {
       print("Error while printing: $e");
     }

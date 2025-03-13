@@ -5,9 +5,37 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
+// import io.flutter.embedding.android.FlutterActivity;
+
 import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
+
+    private static final String CHANNEL = "auto_print";
+
+    @Override
+    public void configureFlutterEngine(FlutterEngine flutterEngine) {
+        super.configureFlutterEngine(flutterEngine);
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
+                .setMethodCallHandler((call, result) -> {
+                    if (call.method.equals("printPDF")) {
+                        String filePath = call.argument("filePath");
+                        String printerUrl = call.argument("printerUrl");
+                        if (filePath != null && printerUrl != null) {
+                            IPPPrinter ippPrinter = new IPPPrinter(printerUrl);
+                            boolean success = ippPrinter.printPDF(filePath);
+                            result.success(success);
+                        } else {
+                            result.error("INVALID_ARGUMENTS", "File path or Printer URL is null", null);
+                        }
+                    } else {
+                        result.notImplemented();
+                    }
+                });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
