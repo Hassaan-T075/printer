@@ -80,6 +80,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> printToSelectedPrinter() async {
+    if (pdfPath == null) {
+      print("No PDF file available!");
+      return;
+    }
+
     setState(() {
       isPrinting = true;
     });
