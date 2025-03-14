@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pdf/pdf.dart';
 
 class PrinterSelectionScreen extends StatefulWidget {
+  const PrinterSelectionScreen({super.key});
+
   @override
   _PrinterSelectionScreenState createState() => _PrinterSelectionScreenState();
 }
@@ -19,7 +19,6 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
     loadPrinters();
   }
 
-  // ✅ Load saved printers from SharedPreferences
   Future<void> loadPrinters() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? savedPrinters = prefs.getStringList('printers');
@@ -33,7 +32,6 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
     }
   }
 
-  // ✅ Save a new printer by IP
   Future<void> savePrinter(String ip) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String printerUrl = "ipp://$ip/ipp/printer";
@@ -46,7 +44,6 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
     await prefs.setStringList('printers', printerUrls);
   }
 
-  // ✅ Delete a printer from the list
   Future<void> deletePrinter(int index) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -56,34 +53,6 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
 
     List<String> printerUrls = printers.map((p) => p.url ?? "").toList();
     await prefs.setStringList('printers', printerUrls);
-  }
-
-  // ✅ Print a test document
-  Future<void> printTest(Printer printer) async {
-    try {
-      await Printing.directPrintPdf(
-        format: PdfPageFormat.a3,
-        printer: printer,
-        onLayout: (format) async => await generatePdf(),
-      );
-    } catch (e) {
-      print("Error printing: $e");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Printing failed!")));
-    }
-  }
-
-  // ✅ Generate a PDF for testing
-  Future<Uint8List> generatePdf() async {
-    return Uint8List.fromList(await pdfDocument());
-  }
-
-  // ✅ Dummy PDF content
-  Future<List<int>> pdfDocument() async {
-    return await Printing.convertHtml(
-      format: PdfPageFormat.a4,
-      html: "<h1>Test Print</h1><p>Hello, this is a test print!</p>",
-    );
   }
 
   @override
@@ -130,10 +99,6 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.print),
-                        onPressed: () => printTest(printers[index]),
-                      ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () => deletePrinter(index),
