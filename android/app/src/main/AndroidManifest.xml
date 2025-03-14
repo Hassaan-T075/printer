@@ -2,6 +2,7 @@
 
     <uses-permission android:name="android.permission.BIND_PRINT_SERVICE"/>
     <application
+        android:usesCleartextTraffic="true"
         android:label="printer"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
