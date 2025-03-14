@@ -36,7 +36,7 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
   // ✅ Save a new printer by IP
   Future<void> savePrinter(String ip) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String printerUrl = "ipp://$ip:80/ipp/print";
+    String printerUrl = "ipp://$ip/ipp/printer";
 
     setState(() {
       printers.add(Printer(url: printerUrl, name: "Custom Printer"));

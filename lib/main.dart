@@ -106,8 +106,10 @@ class _MyAppState extends State<MyApp> {
     try {
       final pdfBytes = await File(pdfPath!).readAsBytes();
 
-      String printerUrl =
-          selectedPrinter!.url!.replaceFirst("ipp://", "http://");
+      String printerUrl = selectedPrinter!.url!;
+
+      // String printerUrl =
+      //     selectedPrinter!.url!.replaceFirst("ipp://", "http://");
 
       // print(printerUrl);
 
