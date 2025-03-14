@@ -1,15 +1,12 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:printer/printer_selection_screen.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:printing/printing.dart';
-import 'dart:io';
 import 'auto_printer.dart';
 import 'pdfviewer.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
   runApp(
@@ -36,7 +33,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    loadSelectedPrinter();
+    // loadPrinters();
 
     // get the initially shared pdf when app starts
     ReceiveSharingIntent.instance
@@ -62,52 +59,56 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   loadPrinters();
+  // }
+
   @override
   void dispose() {
     ReceiveSharingIntent.instance.reset();
     super.dispose();
   }
 
-  Future<void> loadSelectedPrinter() async {
+  Future<void> loadPrinters() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? printerUrl = prefs.getString('selectedPrinterUrl');
-    if (printerUrl != null) {
+    List<String>? savedPrinters = prefs.getStringList('printers');
+
+    if (savedPrinters != null) {
       setState(() {
-        selectedPrinter = Printer(url: printerUrl, name: 'Saved Printer');
+        printers = savedPrinters.map((p) {
+          List<String> parts = p.split('|');
+          return Printer(url: parts[1], name: parts[0]);
+        }).toList();
       });
     }
   }
 
-  Future<void> saveSelectedPrinter(Printer printer) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedPrinterUrl', printer.url ?? '');
-    setState(() {
-      selectedPrinter = printer;
-    });
-  }
-
   Future<void> printToSelectedPrinter() async {
-    if (selectedPrinter == null) {
-      print("No printer selected!");
-      return;
-    }
-    if (pdfPath == null) {
-      print("No PDF file available!");
-      return;
-    }
+    // if (selectedPrinter == null) {
+    //   print("No printer selected!");
+    //   return;
+    // }
+    // if (pdfPath == null) {
+    //   print("No PDF file available!");
+    //   return;
+    // }
+
+    await loadPrinters();
 
     try {
-      String printerUrl = selectedPrinter!.url!;
-
-      Uri uri = Uri.parse(printerUrl);
-
-      bool success = await AutoPrint.printPDF(pdfPath!, printerUrl);
-
-      if (success) {
-        print("Printing started successfully!");
-      } else {
-        print("Failed to start printing.");
+      for (Printer printer in printers) {
+        print(printer.url);
       }
+
+      // bool success = await AutoPrint.printPDF(pdfPath!, printerUrl);
+
+      // if (success) {
+      //   print("Printing started successfully!");
+      // } else {
+      //   print("Failed to start printing.");
+      // }
     } catch (e) {
       print("Error while printing: $e");
     }
@@ -154,34 +155,38 @@ class _MyAppState extends State<MyApp> {
               height: MediaQuery.of(context).size.height * 0.6,
               child: pdfPath == null
                   ? const Center(child: Text("No PDF received"))
-                  : PDFViewerScreen(pdfPath: pdfPath!),
+                  : PDFViewerScreen(pdfPath: pdfPath ?? ""),
             ),
             Container(
               height: 10,
               width: double.infinity,
               color: const Color(0xFF192044),
             ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(vertical: 10),
+            //   child: selectedPrinter == null
+            //       ? const Text("No printer selected")
+            //       : Text("Selected Printer: ${selectedPrinter?.url ?? ""}"),
+            // ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: selectedPrinter == null
-                  ? const Text("No printer selected")
-                  : Text("Selected Printer: ${selectedPrinter?.url ?? ""}"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF192044),
-              ),
-              onPressed: () async {
-                final printer = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const PrinterSelectionScreen()),
-                );
-                if (printer != null) saveSelectedPrinter(printer);
-              },
-              child: const Text(
-                "Manage Printers",
-                style: TextStyle(color: Color(0xFF00CC99)),
+              padding: const EdgeInsets.only(top: 20.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF192044),
+                ),
+                onPressed: () async {
+                  // final printer =
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PrinterSelectionScreen()),
+                  );
+                  // if (printer != null) saveSelectedPrinter(printer);
+                },
+                child: const Text(
+                  "Manage Printers",
+                  style: TextStyle(color: Color(0xFF00CC99)),
+                ),
               ),
             ),
             ElevatedButton(

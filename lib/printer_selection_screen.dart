@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,7 +46,6 @@ class PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
     }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String printerEntry = "$name|ipp://$ip/ipp/printer";
 
     setState(() {
       printers.add(Printer(url: "ipp://$ip/ipp/printer", name: name));
@@ -100,6 +100,11 @@ class PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
                   keyboardType: TextInputType.number,
                   decoration:
                       const InputDecoration(labelText: "Enter Printer IP"),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny('-'),
+                    FilteringTextInputFormatter.deny(' '),
+                    FilteringTextInputFormatter.deny(','),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(
