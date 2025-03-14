@@ -29,11 +29,11 @@ class _MyAppState extends State<MyApp> {
   Stream<List<SharedMediaFile>>? _intentStreamSubscription;
   Printer? selectedPrinter;
   List<Printer> printers = [];
+  bool isPrinting = false;
 
   @override
   void initState() {
     super.initState();
-    // loadPrinters();
 
     // get the initially shared pdf when app starts
     ReceiveSharingIntent.instance
@@ -59,12 +59,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   loadPrinters();
-  // }
-
   @override
   void dispose() {
     ReceiveSharingIntent.instance.reset();
@@ -86,31 +80,30 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> printToSelectedPrinter() async {
-    // if (selectedPrinter == null) {
-    //   print("No printer selected!");
-    //   return;
-    // }
-    // if (pdfPath == null) {
-    //   print("No PDF file available!");
-    //   return;
-    // }
+    setState(() {
+      isPrinting = true;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     await loadPrinters();
 
     try {
       for (Printer printer in printers) {
-        print(printer.url);
+        bool success = await AutoPrint.printPDF(pdfPath!, printer.url);
+
+        if (success) {
+          print("Printing started successfully!");
+        } else {
+          print("Failed to start printing.");
+        }
       }
-
-      // bool success = await AutoPrint.printPDF(pdfPath!, printerUrl);
-
-      // if (success) {
-      //   print("Printing started successfully!");
-      // } else {
-      //   print("Failed to start printing.");
-      // }
     } catch (e) {
       print("Error while printing: $e");
+    } finally {
+      setState(() {
+        isPrinting = false;
+      });
     }
   }
 
@@ -162,12 +155,6 @@ class _MyAppState extends State<MyApp> {
               width: double.infinity,
               color: const Color(0xFF192044),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(vertical: 10),
-            //   child: selectedPrinter == null
-            //       ? const Text("No printer selected")
-            //       : Text("Selected Printer: ${selectedPrinter?.url ?? ""}"),
-            // ),
             Padding(
               padding: const EdgeInsets.only(top: 20.0),
               child: ElevatedButton(
@@ -175,13 +162,11 @@ class _MyAppState extends State<MyApp> {
                   backgroundColor: const Color(0xFF192044),
                 ),
                 onPressed: () async {
-                  // final printer =
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const PrinterSelectionScreen()),
                   );
-                  // if (printer != null) saveSelectedPrinter(printer);
                 },
                 child: const Text(
                   "Manage Printers",
@@ -199,6 +184,32 @@ class _MyAppState extends State<MyApp> {
                 style: TextStyle(color: Color(0xFF00CC99)),
               ),
             ),
+            (isPrinting)
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 20.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Printing",
+                          style:
+                              TextStyle(fontSize: 15, color: Color(0xFF192044)),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF00CC99),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Container(),
           ],
         ),
       ),
