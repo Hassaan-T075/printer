@@ -26,8 +26,14 @@ public class MainActivity extends FlutterActivity {
                         String printerUrl = call.argument("printerUrl");
                         if (filePath != null && printerUrl != null) {
                             IPPPrinter ippPrinter = new IPPPrinter(printerUrl);
-                            boolean success = ippPrinter.printPDF(filePath);
-                            result.success(success);
+                            // boolean success = ippPrinter.printPDF(filePath);
+                            ippPrinter.printPDF(filePath, new IPPPrinter.PrintCallback() {
+                            @Override
+                            public void onPrintCompleted(boolean success) {
+                                result.success(success);
+                            }
+                        });
+                            // result.success(success);
                         } else {
                             result.error("INVALID_ARGUMENTS", "File path or Printer URL is null", null);
                         }
