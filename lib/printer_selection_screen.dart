@@ -6,12 +6,13 @@ class PrinterSelectionScreen extends StatefulWidget {
   const PrinterSelectionScreen({super.key});
 
   @override
-  _PrinterSelectionScreenState createState() => _PrinterSelectionScreenState();
+  PrinterSelectionScreenState createState() => PrinterSelectionScreenState();
 }
 
-class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
+class PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
   List<Printer> printers = [];
   TextEditingController ipController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
 
   @override
   void initState() {
@@ -25,23 +26,38 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
 
     if (savedPrinters != null) {
       setState(() {
-        printers = savedPrinters
-            .map((p) => Printer(url: p, name: "Custom Printer"))
-            .toList();
+        printers = savedPrinters.map((p) {
+          List<String> parts = p.split('|'); // Split name and IP
+          return Printer(url: parts[1], name: parts[0]);
+        }).toList();
       });
     }
   }
 
-  Future<void> savePrinter(String ip) async {
+  Future<void> savePrinter(String name, String ip) async {
+    if (name.isEmpty || ip.isEmpty) {
+      _showSnackBar("Both fields are required.");
+      return;
+    }
+    if (name.contains('|')) {
+      _showSnackBar("Printer name cannot contain '|'.");
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String printerUrl = "ipp://$ip/ipp/printer";
+    String printerEntry = "$name|ipp://$ip/ipp/printer";
 
     setState(() {
-      printers.add(Printer(url: printerUrl, name: "Custom Printer"));
+      printers.add(Printer(url: "ipp://$ip/ipp/printer", name: name));
     });
 
-    List<String> printerUrls = printers.map((p) => p.url ?? "").toList();
-    await prefs.setStringList('printers', printerUrls);
+    FocusScope.of(context).unfocus();
+    nameController.clear();
+    ipController.clear();
+
+    List<String> printerEntries =
+        printers.map((p) => "${p.name}|${p.url}").toList();
+    await prefs.setStringList('printers', printerEntries);
   }
 
   Future<void> deletePrinter(int index) async {
@@ -51,8 +67,16 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
       printers.removeAt(index);
     });
 
-    List<String> printerUrls = printers.map((p) => p.url ?? "").toList();
-    await prefs.setStringList('printers', printerUrls);
+    List<String> printerEntries =
+        printers.map((p) => "${p.name}|${p.url}").toList();
+    await prefs.setStringList('printers', printerEntries);
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    ));
   }
 
   @override
@@ -63,50 +87,60 @@ class _PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: ipController,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        const InputDecoration(labelText: "Enter Printer IP"),
-                  ),
+                TextField(
+                  controller: nameController,
+                  decoration:
+                      const InputDecoration(labelText: "Enter Printer Name"),
                 ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: ipController,
+                  keyboardType: TextInputType.number,
+                  decoration:
+                      const InputDecoration(labelText: "Enter Printer IP"),
+                ),
+                const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                    if (ipController.text.isNotEmpty) {
-                      savePrinter(ipController.text);
-                      ipController.clear();
-                    }
+                    savePrinter(
+                        nameController.text.trim(), ipController.text.trim());
                   },
-                  child: const Text("Add"),
-                )
+                  child: const Text(
+                    "Add Printer",
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: printers.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(printers[index].name),
-                  subtitle: Text(printers[index].url ?? ""),
-                  onTap: () {
-                    Navigator.pop(
-                        context, printers[index]); // return selected printer
-                  },
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => deletePrinter(index),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            child: Container(
+              color: Colors.grey[100],
+              child: ListView.builder(
+                itemCount: printers.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(printers[index].name),
+                    subtitle: Text(printers[index].url ?? ""),
+                    onTap: () {
+                      Navigator.pop(context, printers[index]);
+                    },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => deletePrinter(index),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

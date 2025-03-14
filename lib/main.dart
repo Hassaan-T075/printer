@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 
 void main() {
   runApp(
-    MaterialApp(
+    const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MyApp(),
     ),
@@ -31,6 +31,7 @@ class _MyAppState extends State<MyApp> {
   String? pdfPath; // stores received pdf path
   Stream<List<SharedMediaFile>>? _intentStreamSubscription;
   Printer? selectedPrinter;
+  List<Printer> printers = [];
 
   @override
   void initState() {
@@ -115,40 +116,83 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Custom PDF Printer")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 15.0),
+          child: RichText(
+            text: const TextSpan(
+              children: [
+                TextSpan(
+                  text: "OCTAL ",
+                  style: TextStyle(
+                    fontFamily: "Lalezar",
+                    fontWeight: FontWeight.bold,
+                    fontSize: 30,
+                    color: Color(0xFF192044),
+                  ),
+                ),
+                TextSpan(
+                  text: "CONNECT",
+                  style: TextStyle(
+                    fontFamily: "Lalezar",
+                    fontWeight: FontWeight.bold,
+                    fontSize: 30,
+                    color: Color(0xFF00CC99),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
+              height: MediaQuery.of(context).size.height * 0.6,
               child: pdfPath == null
                   ? const Center(child: Text("No PDF received"))
                   : PDFViewerScreen(pdfPath: pdfPath!),
             ),
             Container(
               height: 10,
-              margin: const EdgeInsets.only(bottom: 10),
               width: double.infinity,
-              color: Colors.green,
+              color: const Color(0xFF192044),
             ),
-            selectedPrinter == null
-                ? const Text("No printer selected")
-                : Text("Selected Printer: ${selectedPrinter?.url ?? ""}"),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: selectedPrinter == null
+                  ? const Text("No printer selected")
+                  : Text("Selected Printer: ${selectedPrinter?.url ?? ""}"),
+            ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF192044),
+              ),
               onPressed: () async {
                 final printer = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => PrinterSelectionScreen()),
+                      builder: (context) => const PrinterSelectionScreen()),
                 );
                 if (printer != null) saveSelectedPrinter(printer);
               },
-              child: const Text("Select Printer"),
+              child: const Text(
+                "Manage Printers",
+                style: TextStyle(color: Color(0xFF00CC99)),
+              ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF192044),
+              ),
               onPressed: printToSelectedPrinter,
-              child: const Text("Print PDF"),
+              child: const Text(
+                "Print PDF",
+                style: TextStyle(color: Color(0xFF00CC99)),
+              ),
             ),
           ],
         ),

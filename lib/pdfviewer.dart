@@ -11,7 +11,7 @@ class PDFViewerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.6,
+      height: MediaQuery.of(context).size.height * 0.5,
       child: pdfPath.isEmpty || !File(pdfPath).existsSync()
           ? const Center(child: Text("Invalid PDF file"))
           : PdfPreview(
