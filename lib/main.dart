@@ -183,7 +183,7 @@ class _MyAppState extends State<MyApp> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF192044),
               ),
-              onPressed: printToSelectedPrinter,
+              onPressed: isPrinting ? null : printToSelectedPrinter,
               child: const Text(
                 "Print PDF",
                 style: TextStyle(color: Color(0xFF00CC99)),
