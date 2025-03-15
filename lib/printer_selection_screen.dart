@@ -131,9 +131,6 @@ class PrinterSelectionScreenState extends State<PrinterSelectionScreen> {
                   return ListTile(
                     title: Text(printers[index].name),
                     subtitle: Text(printers[index].url ?? ""),
-                    onTap: () {
-                      Navigator.pop(context, printers[index]);
-                    },
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
